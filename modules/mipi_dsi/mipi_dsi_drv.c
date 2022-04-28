@@ -9,7 +9,7 @@
  * I2C slave address: 0x45
  */
 #include "mipi_dsi.h"
-
+#include <linux/version.h>
 
 #define MIPI_DSI_DRIVER_NAME		"mipi_dsi"
 
@@ -84,6 +84,11 @@ static int mipi_dsi_probe(struct mipi_dsi_device *dsi)
 	int ret;
 
 	DBG_FUNC();
+
+	dsi->mode_flags = (MIPI_DSI_MODE_VIDEO /*| MIPI_DSI_MODE_VIDEO_SYNC_PULSE*/);
+	dsi->format = MIPI_DSI_FMT_RGB888;
+	dsi->lanes = 4;
+
 	ret = mipi_dsi_attach(dsi);
 	if (ret) {
 		dev_err(&dsi->dev, "failed to attach dsi to host: %d\n", ret);
@@ -353,6 +358,9 @@ static int i2c_md_probe(struct i2c_client *i2c, const struct i2c_device_id *id)
 	}
 
 	md->panel_data->set_dsi(md->dsi);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 0)
+	md->panel.prepare_upstream_first = true;
+#endif
 	drm_panel_init(&md->panel, dev, &panel_funcs, DRM_MODE_CONNECTOR_DSI);
 	drm_panel_add(&md->panel);
 
